@@ -21,8 +21,12 @@ import com.dtolabs.rundeck.core.plugins.Plugin;
 import com.dtolabs.rundeck.core.plugins.configuration.PropertyScope;
 import com.dtolabs.rundeck.plugins.descriptions.PluginDescription;
 import com.dtolabs.rundeck.plugins.descriptions.PluginProperty;
+import com.dtolabs.rundeck.plugins.descriptions.RenderingOptions;
+import com.dtolabs.rundeck.plugins.descriptions.RenderingOption;
 import com.dtolabs.rundeck.plugins.notification.NotificationPlugin;
 import com.dtolabs.rundeck.plugins.descriptions.Password;
+
+import static com.dtolabs.rundeck.core.plugins.configuration.StringRenderingConstants.SELECTION_ACCESSOR_KEY;
 
 import java.io.*;
 import java.net.HttpURLConnection;
@@ -74,6 +78,11 @@ public class SlackNotificationPlugin implements NotificationPlugin {
     @PluginProperty(title = "WebHook Token",
                     description = "WebHook Token, like T00000000/B00000000/XXXXXXXXXXXXXXXXXXXXXXXX",
                     scope=PropertyScope.Instance)
+    @RenderingOptions(
+            {
+                    @RenderingOption(key = SELECTION_ACCESSOR_KEY, value = "STORAGE_PATH"),
+            }
+    )
     private String webhook_token;
 
     @PluginProperty(title = "Slack Channel",
