@@ -111,7 +111,7 @@ public class SlackNotificationPlugin implements NotificationPlugin {
             throw new IllegalArgumentException("Unknown trigger type: [" + trigger + "].");
         }
 
-        if(this.webhook_base_url.isEmpty() || this.webhook_url.isEmpty()){
+        if(this.webhook_url.isEmpty()){
             throw new IllegalArgumentException("URL not set");
         }
 
