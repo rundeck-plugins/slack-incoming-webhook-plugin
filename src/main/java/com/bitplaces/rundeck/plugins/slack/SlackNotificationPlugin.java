@@ -71,8 +71,8 @@ public class SlackNotificationPlugin implements NotificationPlugin {
     private String webhook_base_url;
 
     @Password
-    @PluginProperty(title = "WebHook Token (old method)",
-                    description = "WebHook Token, like T00000000/B00000000/XXXXXXXXXXXXXXXXXXXXXXXX",
+    @PluginProperty(title = "(deprecated) WebHook Token",
+                    description = "(Use \"WebHook Base URL\" Instead) WebHook Token, like T00000000/B00000000/XXXXXXXXXXXXXXXXXXXXXXXX",
                     scope=PropertyScope.Instance)
     private String webhook_token;
 
@@ -123,10 +123,10 @@ public class SlackNotificationPlugin implements NotificationPlugin {
             throw new IllegalArgumentException("URL not set or not valid token");
         }
 
-        if(this.webhook_token.isEmpty()) {
-            String webhook_url=this.webhook_base_url;
+        if(this.webhook_token != null && !this.webhook_token.isEmpty()) {
+            webhook_url=this.webhook_base_url+"/"+this.webhook_token;
         } else {
-            String webhook_url=this.webhook_base_url+"/"+this.webhook_token;
+            webhook_url=this.webhook_base_url;
         }
 
         String message = generateMessage(trigger, executionData, config, this.slack_channel);
