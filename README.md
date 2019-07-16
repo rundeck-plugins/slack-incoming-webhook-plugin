@@ -30,13 +30,9 @@ The only required configuration settings are:
 
 ## Slack message example.
 
-On success.
+On success and Failure
 
-![on success](on_success.png)
-
-On failure.
-
-![on failure](on_failure.png)
+![example](example.png)
 
 ## Contributors
 *  Original [hbakkum/rundeck-hipchat-plugin](https://github.com/hbakkum/rundeck-hipchat-plugin) author: Hayden Bakkum @hbakkum
@@ -44,4 +40,4 @@ On failure.
     *  @totallyunknown
     *  @notandy
     *  @lusis
-*  @sawanoboly
+    *  @sawanoboly
