@@ -76,6 +76,8 @@ public class SlackNotificationPlugin implements NotificationPlugin {
                     scope=PropertyScope.Instance)
     private String webhook_token;
 
+    private String webhook_url;
+
     @PluginProperty(title = "Slack Channel",
                     description = "Slack Channel, like #channel-name (optional)",
                     scope=PropertyScope.Instance)
@@ -123,7 +125,6 @@ public class SlackNotificationPlugin implements NotificationPlugin {
 
         if(this.webhook_token.isEmpty()) {
             String webhook_url=this.webhook_base_url;
-            
         } else {
             String webhook_url=this.webhook_base_url+"/"+this.webhook_token;
         }
