@@ -27,6 +27,9 @@ import com.dtolabs.rundeck.plugins.notification.NotificationPlugin;
 import com.dtolabs.rundeck.plugins.descriptions.Password;
 
 import static com.dtolabs.rundeck.core.plugins.configuration.StringRenderingConstants.SELECTION_ACCESSOR_KEY;
+import static com.dtolabs.rundeck.core.plugins.configuration.StringRenderingConstants.STORAGE_PATH_ROOT_KEY;
+import static com.dtolabs.rundeck.core.plugins.configuration.StringRenderingConstants.STORAGE_FILE_META_FILTER_KEY;
+import static com.dtolabs.rundeck.core.plugins.configuration.StringRenderingConstants.VALUE_CONVERSION_KEY;
 
 import java.io.*;
 import java.net.HttpURLConnection;
@@ -81,6 +84,9 @@ public class SlackNotificationPlugin implements NotificationPlugin {
     @RenderingOptions(
             {
                     @RenderingOption(key = SELECTION_ACCESSOR_KEY, value = "STORAGE_PATH"),
+                    @RenderingOption(key = STORAGE_PATH_ROOT_KEY, value = "keys"),
+                    @RenderingOption(key = STORAGE_FILE_META_FILTER_KEY, value = "Rundeck-data-type=password"),
+                    @RenderingOption(key = VALUE_CONVERSION_KEY, value = "STORAGE_PATH_AUTOMATIC_READ"),
             }
     )
     private String webhook_token;
