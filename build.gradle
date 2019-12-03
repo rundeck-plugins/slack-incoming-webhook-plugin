@@ -1,10 +1,12 @@
 plugins {
     id 'java'
     id 'pl.allegro.tech.build.axion-release' version '1.7.1'
+    id 'nebula.ospackage' version '8.0.3'
 }
 
 apply plugin: 'java'
 apply plugin: 'pl.allegro.tech.build.axion-release'
+apply plugin: 'nebula.ospackage'
 
 sourceCompatibility = 1.8
 defaultTasks 'clean', 'build'
@@ -74,3 +76,13 @@ jar {
 
 //set jar task to depend on copyToLib
 jar.dependsOn(copyToLib)
+
+ospackage {
+    summary 'Sends Rundeck notification messages to a slack channel'
+    license 'Apache 2.0'
+    requires 'rundeck'
+
+    from(jar.outputs.files) {
+        into 'var/lib/rundeck/libext'
+    }
+}
