@@ -28,6 +28,11 @@ The only required configuration settings are:
 
 - `WebHook URL`: Slack incoming-webhook URL.
 
+Optionally you can add proxy configurations:
+
+- `proxy_port`: Port
+- `proxy_host`: IP or hostname
+
 ## Slack message example.
 
 On success.
