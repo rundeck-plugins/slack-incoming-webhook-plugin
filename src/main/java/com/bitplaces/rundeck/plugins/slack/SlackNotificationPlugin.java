@@ -80,6 +80,18 @@ public class SlackNotificationPlugin implements NotificationPlugin {
                     description = "Slack Channel, like #channel-name (optional)",
                     scope=PropertyScope.Instance)
     private String slack_channel;
+    
+    @PluginProperty(title = "Proxy host",
+                    description = "Outbound proxy",
+                    required = false,
+                    scope=PropertyScope.Project)
+    private String proxy_host;
+
+    @PluginProperty(title = "Proxy port",
+                    description = "Outbound proxy port",
+                    required = false,
+                    scope=PropertyScope.Project)
+    private String proxy_port;
 
     /**
      * Sends a message to a Slack room when a job notification event is raised by Rundeck.
@@ -93,7 +105,12 @@ public class SlackNotificationPlugin implements NotificationPlugin {
     public boolean postNotification(String trigger, Map executionData, Map config) {
 
         String ACTUAL_SLACK_TEMPLATE;
-
+        if (proxy_host != null && proxy_port != null) {
+            Properties systemProperties = System.getProperties();
+            systemProperties.setProperty("https.proxyHost",proxy_host);
+            systemProperties.setProperty("https.proxyPort",proxy_port);
+        }
+        
         ClassTemplateLoader builtInTemplate = new ClassTemplateLoader(SlackNotificationPlugin.class, "/templates");
         TemplateLoader[] loaders = new TemplateLoader[]{builtInTemplate};
         MultiTemplateLoader mtl = new MultiTemplateLoader(loaders);
