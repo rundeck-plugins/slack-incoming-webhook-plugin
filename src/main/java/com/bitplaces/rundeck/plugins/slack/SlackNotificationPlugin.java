@@ -81,6 +81,22 @@ public class SlackNotificationPlugin implements NotificationPlugin {
                     scope=PropertyScope.Instance)
     private String slack_channel;
 
+    @PluginProperty(
+        title = "Proxy host",
+        description = "Outbound proxy",
+        required = false,
+        scope=PropertyScope.Project
+    )
+    private String proxy_host;
+
+    @PluginProperty(
+        title = "Proxy port",
+        description = "Outbound proxy port",
+        required = false,
+        scope=PropertyScope.Project
+    )
+    private String proxy_port;
+
     /**
      * Sends a message to a Slack room when a job notification event is raised by Rundeck.
      *
@@ -91,6 +107,33 @@ public class SlackNotificationPlugin implements NotificationPlugin {
      * @return true, if the Slack API response indicates a message was successfully delivered to a chat room
      */
     public boolean postNotification(String trigger, Map executionData, Map config) {
+        Properties systemProperties = System.getProperties();
+        String proxy_env = null;
+        URL aURL;
+        String proxy_env_host = null;
+        String proxy_env_port = null;
+
+        if (proxy_host != null && proxy_port != null && proxy_host != "" && proxy_port != "") {
+            systemProperties.setProperty("https.proxyHost", proxy_host);
+            systemProperties.setProperty("https.proxyPort", proxy_port);
+        } else if (System.getenv("HTTPS_PROXY") != null || System.getenv("https_proxy") != null) {
+            if (System.getenv("HTTPS_PROXY") != null) {
+                proxy_env = System.getenv("HTTPS_PROXY");
+            } else {
+                proxy_env = System.getenv("https_proxy");
+            }
+            try {
+                aURL = new URL(proxy_env);
+                proxy_env_host = aURL.getHost();
+                proxy_env_port = String.valueOf(aURL.getPort());
+            } catch(Exception e) {
+                throw new SlackNotificationPluginException("Proxy environment variable is malformed");
+            }
+            if (proxy_env_host != null && proxy_env_port != null && proxy_env_host != "" && proxy_env_port != "") {
+                systemProperties.setProperty("https.proxyHost", proxy_env_host);
+                systemProperties.setProperty("https.proxyPort", proxy_env_port);
+            }
+        }
 
         String ACTUAL_SLACK_TEMPLATE;
 
