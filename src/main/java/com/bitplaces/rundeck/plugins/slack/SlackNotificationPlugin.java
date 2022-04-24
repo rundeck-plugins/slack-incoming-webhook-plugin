@@ -81,6 +81,16 @@ public class SlackNotificationPlugin implements NotificationPlugin {
                     scope=PropertyScope.Instance)
     private String slack_channel;
 
+    @PluginProperty(title = "Slack messsage icon url",
+                    description = "Icon url, like http://rtfm.co.ua/wp-content/uploads/2014/09/zabbix_logo.png (optional)",
+                    scope=PropertyScope.Instance)
+    private String slack_icon_url;
+
+    @PluginProperty(title = "Slack messsage username",
+                    description = "Username, like Dev-zbx (optional)",
+                    scope=PropertyScope.Instance)
+    private String slack_username;
+
     /**
      * Sends a message to a Slack room when a job notification event is raised by Rundeck.
      *
@@ -136,7 +146,7 @@ public class SlackNotificationPlugin implements NotificationPlugin {
         }
     }
 
-    private String generateMessage(String trigger, Map executionData, Map config, String channel) {
+    private String generateMessage(String trigger, Map executionData, Map config, String channel, String username, String icon_url) {
         String templateName = TRIGGER_NOTIFICATION_DATA.get(trigger).template;
         String color = TRIGGER_NOTIFICATION_DATA.get(trigger).color;
 
@@ -147,6 +157,12 @@ public class SlackNotificationPlugin implements NotificationPlugin {
         model.put("config", config);
         if (channel != null) {
             model.put("channel", channel);
+        }
+        if (username != null) {
+            model.put("username", username);
+        }
+        if (icon_url != null) {
+            model.put("icon_url", icon_url);
         }
 
         StringWriter sw = new StringWriter();

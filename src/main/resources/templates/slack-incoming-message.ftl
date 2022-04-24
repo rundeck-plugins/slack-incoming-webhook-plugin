@@ -20,6 +20,12 @@
 <#if channel??>
    "channel":"${channel}",
 </#if>
+<#if username??>
+   "username":"${username}",
+</#if>
+<#if icon_url??>
+   "icon_url":"${icon_url}",
+</#if>
    "attachments":[
       {
          "fallback":"${state}: ${message}",
