@@ -23,8 +23,8 @@
 <#if username??>
    "username":"${username}",
 </#if>
-<#if icon_url??>
-   "icon_url":"${icon_url}",
+<#if icon_emoji??>
+   "icon_emoji":"${icon_emoji}",
 </#if>
    "attachments":[
       {

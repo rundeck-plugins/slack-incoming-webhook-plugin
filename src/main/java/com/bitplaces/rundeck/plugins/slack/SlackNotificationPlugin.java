@@ -81,10 +81,10 @@ public class SlackNotificationPlugin implements NotificationPlugin {
                     scope=PropertyScope.Instance)
     private String slack_channel;
 
-    @PluginProperty(title = "Slack messsage icon url",
-                    description = "Icon url, like http://rtfm.co.ua/wp-content/uploads/2014/09/zabbix_logo.png (optional)",
+    @PluginProperty(title = "Slack messsage Icon emoji",
+                    description = "Icon Emoji, like :fire: (optional)",
                     scope=PropertyScope.Instance)
-    private String slack_icon_url;
+    private String slack_icon_emoji;
 
     @PluginProperty(title = "Slack messsage username",
                     description = "Username, like Dev-zbx (optional)",
@@ -133,7 +133,7 @@ public class SlackNotificationPlugin implements NotificationPlugin {
 
         String webhook_url=this.webhook_base_url+"/"+this.webhook_token;
 
-        String message = generateMessage(trigger, executionData, config, this.slack_channel);
+        String message = generateMessage(trigger, executionData, config, this.slack_channel, this.slack_username, this.slack_icon_emoji);
         String slackResponse = invokeSlackAPIMethod(webhook_url, message);
         String ms = "payload=" + this.urlEncode(message);
 
@@ -146,7 +146,7 @@ public class SlackNotificationPlugin implements NotificationPlugin {
         }
     }
 
-    private String generateMessage(String trigger, Map executionData, Map config, String channel, String username, String icon_url) {
+    private String generateMessage(String trigger, Map executionData, Map config, String channel, String username, String icon_emoji) {
         String templateName = TRIGGER_NOTIFICATION_DATA.get(trigger).template;
         String color = TRIGGER_NOTIFICATION_DATA.get(trigger).color;
 
@@ -161,8 +161,8 @@ public class SlackNotificationPlugin implements NotificationPlugin {
         if (username != null) {
             model.put("username", username);
         }
-        if (icon_url != null) {
-            model.put("icon_url", icon_url);
+        if (icon_emoji != null) {
+            model.put("icon_emoji", icon_emoji);
         }
 
         StringWriter sw = new StringWriter();

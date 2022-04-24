@@ -62,9 +62,9 @@ jar {
         attributes 'Rundeck-Plugin-Rundeck-Compatibility-Version': '2.8.2+'
         attributes 'Rundeck-Plugin-Tags': 'java,notification,slack'
         attributes 'Rundeck-Plugin-License': 'Apache 2.0'
-        attributes 'Rundeck-Plugin-Source-Link': 'https://github.com/rundeck-plugins/slack-incoming-webhook-plugin'
+        attributes 'Rundeck-Plugin-Source-Link': 'https://github.com/GloomyDay/slack-incoming-webhook-plugin'
         attributes 'Rundeck-Plugin-Target-Host-Compatibility': 'all'
-        attributes 'Rundeck-Plugin-Author': 'Rundeck, Inc.'
+        attributes 'Rundeck-Plugin-Author': 'Aleksandr Krotov'
         attributes 'Rundeck-Plugin-Version': '1.2', 'Rundeck-Plugin-Archive': 'true','Rundeck-Plugin-File-Version': "${project.version}"
         //create space-separated list of pluginLibs
         def libList = configurations.pluginLibs.collect{'lib/'+it.name}.join(' ')
