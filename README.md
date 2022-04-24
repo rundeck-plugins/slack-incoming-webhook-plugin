@@ -1,7 +1,7 @@
 rundeck-slack-incoming-webhook-plugin
 ======================
 
-Sends rundeck notification messages to a slack channel.  This plugin  is based on [rundeck-slack-plugin](https://github.com/rundeck-plugins/slack-incoming-webhook-plugin)(based on rundeck-plugins/slack-incoming-webhook-plugin).
+Sends rundeck notification messages to a slack channel.  This plugin  is based on [rundeck-slack-plugin](https://github.com/rundeck-plugins/slack-incoming-webhook-plugin).
 
 Difference - added additional config keys: username & icon_emoji
 
