@@ -45,3 +45,29 @@ On failure.
     *  @notandy
     *  @lusis
 *  @sawanoboly
+
+# How to
+
+## Build
+
+Build the project with Gradle
+
+    ./gradlew build
+
+## Test
+
+Test the project with Gradle
+
+    ./gradlew check
+
+## Release
+
+Release the project.
+
+    ./gradlew release
+
+## Version
+
+Get current version from axion-release plugin
+
+    ./gradlew currentVersion
