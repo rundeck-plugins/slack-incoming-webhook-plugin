@@ -1,10 +1,15 @@
 plugins {
     id 'java'
-    id 'pl.allegro.tech.build.axion-release' version libs.versions.axionRelease
+    alias(libs.plugins.axionRelease)
+    alias(libs.plugins.nexusPublish)
 }
 
 apply plugin: 'java'
-apply plugin: 'pl.allegro.tech.build.axion-release'
+
+group = 'org.rundeck-plugins'
+ext.publishName = "Slack Incoming Webhook Plugin ${project.version}"
+ext.publishDescription = project.description ?: 'Rundeck Plugin to send Slack Webhook'
+ext.githubSlug = 'rundeck-plugins/slack-incoming-webhook-plugin'
 
 java {
     sourceCompatibility = JavaVersion.VERSION_11
@@ -66,3 +71,14 @@ jar {
 //set jar task to depend on copyToLib
 jar.dependsOn(copyToLib)
 
+nexusPublishing {
+    packageGroup = 'org.rundeck-plugins'
+    repositories {
+        sonatype{
+            stagingProfileId = '67d196ce5bae'
+        }
+    }
+}
+
+
+apply from: "${rootDir}/gradle/publishing.gradle"
