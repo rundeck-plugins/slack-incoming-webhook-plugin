@@ -6,15 +6,16 @@ plugins {
 apply plugin: 'java'
 apply plugin: 'pl.allegro.tech.build.axion-release'
 
-sourceCompatibility = 1.8
-defaultTasks 'clean', 'build'
+java {
+    sourceCompatibility = JavaVersion.VERSION_11
+}
 
 configurations{
     //declare custom pluginLibs configuration to include only libs for this plugin
     pluginLibs
 
     //declare compile to extend from pluginLibs so it inherits the dependencies
-    compile{
+    implementation {
         extendsFrom pluginLibs
     }
 }
@@ -24,16 +25,6 @@ scmVersion {
     tag {
         prefix = 'v'
         versionSeparator = ''
-        def origDeserialize=deserialize
-
-        //apend .0 to satisfy semver if the tag version is only X.Y
-        deserialize = { config, position, tagName ->
-            def orig = origDeserialize(config, position, tagName)
-            if (orig.split('\\.').length < 3) {
-                orig += ".0"
-            }
-            orig
-        }
     }
 }
 project.version = scmVersion.version
@@ -44,11 +35,11 @@ repositories {
 
 dependencies {
     pluginLibs group: 'org.freemarker', name: 'freemarker', version: '2.3.20'
-    compile(group:'org.rundeck', name: 'rundeck-core', version: '2.8.2')
+    implementation(group: 'org.rundeck', name: 'rundeck-core', version: '5.9.0-20250205')
 }
 
 // task to copy plugin libs to output/lib dir
-task copyToLib(type: Copy) {
+tasks.register('copyToLib', Copy) {
     into "$buildDir/output/lib"
     from configurations.pluginLibs
 }
@@ -75,6 +66,3 @@ jar {
 //set jar task to depend on copyToLib
 jar.dependsOn(copyToLib)
 
-task wrapper(type: Wrapper) {
-    gradleVersion = '2.12'
-}
