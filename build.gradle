@@ -10,9 +10,14 @@ group = 'org.rundeck-plugins'
 ext.publishName = "Slack Incoming Webhook Plugin ${project.version}"
 ext.publishDescription = project.description ?: 'Rundeck Plugin to send Slack Webhook'
 ext.githubSlug = 'rundeck-plugins/slack-incoming-webhook-plugin'
+ext.developers = [
+        [id: 'gschueler', name: 'Greg Schueler', email: 'greg@rundeck.com']
+]
 
 java {
     sourceCompatibility = JavaVersion.VERSION_11
+    withJavadocJar()
+    withSourcesJar()
 }
 
 configurations{
@@ -76,9 +81,7 @@ jar.dependsOn(copyToLib)
 nexusPublishing {
     packageGroup = 'org.rundeck-plugins'
     repositories {
-        sonatype{
-            stagingProfileId = '67d196ce5bae'
-        }
+        sonatype()
     }
 }
 
