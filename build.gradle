@@ -1,6 +1,6 @@
 plugins {
     id 'java'
-    id 'pl.allegro.tech.build.axion-release' version '1.18.16'
+    id 'pl.allegro.tech.build.axion-release' version libs.versions.axionRelease
 }
 
 apply plugin: 'java'
@@ -34,8 +34,8 @@ repositories {
 }
 
 dependencies {
-    pluginLibs group: 'org.freemarker', name: 'freemarker', version: '2.3.34'
-    implementation(group: 'org.rundeck', name: 'rundeck-core', version: '5.9.0-20250205')
+    pluginLibs libs.freemarker
+    implementation libs.rundeckCore
 }
 
 // task to copy plugin libs to output/lib dir
