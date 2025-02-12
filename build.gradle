@@ -40,7 +40,9 @@ repositories {
 
 dependencies {
     pluginLibs libs.freemarker
-    implementation libs.rundeckCore
+    implementation(libs.rundeckCore) {
+        exclude(group: "com.jcraft")
+    }
 }
 
 // task to copy plugin libs to output/lib dir
