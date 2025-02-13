@@ -40,7 +40,7 @@ publishing {
                     connection = "scm:git:git@github.com/${githubSlug}.git"
                     developerConnection = "scm:git:git@github.com:${githubSlug}.git"
                 }
-                if (project.ext.hasProperty('developers')) {
+                if (project.ext.developers) {
                     developers {
                         project.ext.developers.each { dev ->
                             developer {
