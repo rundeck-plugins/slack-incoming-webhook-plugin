@@ -56,11 +56,23 @@
                "value":"${executionData.user}",
                "short":true
             }
+<#if trigger == "success">
+            ,{
+               "title":"Succeeded Nodes",
+               "value":"${executionData.succeededNodeListString}",
+               "short":true
+            }
+</#if>
 <#if trigger == "failure">
             ,{
                "title":"Failed Nodes",
                "value":"${executionData.failedNodeListString!"- (Job itself failed)"}",
                "short":false
+            },
+            {
+               "title":"Succeeded Nodes",
+               "value":"${executionData.succeededNodeListString}",
+               "short":true
             }
 </#if>
 ]
