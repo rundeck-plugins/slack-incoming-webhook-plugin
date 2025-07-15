@@ -114,8 +114,11 @@ public class SlackNotificationPlugin implements NotificationPlugin {
                 MultiTemplateLoader mtl = new MultiTemplateLoader(loaders);
                 FREEMARKER_CFG.setTemplateLoader(mtl);
                 ACTUAL_SLACK_TEMPLATE = external_template;
-            } catch (Exception e) {
-                System.err.printf("No such directory: %s\n", SLACK_EXT_MESSAGE_TEMPLATE_PATH);
+            } catch (IOException e) {
+                System.err.printf("I/O error while accessing directory: %s. Error: %s\n", SLACK_EXT_MESSAGE_TEMPLATE_PATH, e.getMessage());
+                return false;
+            } catch (SecurityException e) {
+                System.err.printf("Permission denied for accessing directory: %s. Error: %s\n", SLACK_EXT_MESSAGE_TEMPLATE_PATH, e.getMessage());
                 return false;
             }
         }else{
