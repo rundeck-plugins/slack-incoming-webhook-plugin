@@ -53,7 +53,11 @@ public class SlackNotificationPlugin implements NotificationPlugin {
     private static final String SLACK_MESSAGE_COLOR_RED = "danger";
 
     private static final String SLACK_MESSAGE_TEMPLATE = "slack-incoming-message.ftl";
-    private static final String SLACK_EXT_MESSAGE_TEMPLATE_PATH = "/var/lib/rundeck/libext/templates";
+    @PluginProperty(title = "Slack External Message Template Path",
+                    description = "Path to the directory containing external Slack message templates",
+                    defaultValue = "/var/lib/rundeck/libext/templates",
+                    scope=PropertyScope.Instance)
+    private String slack_ext_message_template_path;
 
     private static final String TRIGGER_START = "start";
     private static final String TRIGGER_SUCCESS = "success";
