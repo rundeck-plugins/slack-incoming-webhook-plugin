@@ -121,7 +121,7 @@ public class SlackNotificationPlugin implements NotificationPlugin {
                 System.err.printf("Permission denied for accessing directory: %s. Error: %s\n", SLACK_EXT_MESSAGE_TEMPLATE_PATH, e.getMessage());
                 return false;
             }
-        }else{
+        } else {
             ClassTemplateLoader builtInTemplate = new ClassTemplateLoader(SlackNotificationPlugin.class, "/templates");
             TemplateLoader[] loaders = new TemplateLoader[]{builtInTemplate};
             MultiTemplateLoader mtl = new MultiTemplateLoader(loaders);
