@@ -3,10 +3,13 @@ nexusPublish = "2.0.0"
 freemarker = "2.3.34"
 rundeckCore = "5.14.0-rc1-20250722"
 axionRelease = "1.18.16"
+# Security overrides for transitive dependencies
+commonsLang3 = "3.18.0"
 
 [libraries]
 freemarker = { group = "org.freemarker", name = "freemarker", version.ref = "freemarker" }
 rundeckCore = { group = "org.rundeck", name = "rundeck-core", version.ref = "rundeckCore" }
+commonsLang3 = { module = "org.apache.commons:commons-lang3", version.ref = "commonsLang3" }
 
 [plugins]
 axionRelease = { id = "pl.allegro.tech.build.axion-release", version.ref = "axionRelease" }

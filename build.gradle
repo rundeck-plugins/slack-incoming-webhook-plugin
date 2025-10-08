@@ -48,6 +48,18 @@ dependencies {
     implementation(libs.rundeckCore) {
         exclude(group: "com.jcraft")
     }
+    
+    // Add secure commons-lang3 to provide alternative to vulnerable commons-lang 2.6
+    implementation(libs.commonsLang3)
+}
+
+configurations.all {
+    resolutionStrategy {
+        // Replace vulnerable commons-lang with secure commons-lang3
+        dependencySubstitution {
+            substitute module('commons-lang:commons-lang') using module("org.apache.commons:commons-lang3:${libs.versions.commonsLang3.get()}")
+        }
+    }
 }
 
 // task to copy plugin libs to output/lib dir
