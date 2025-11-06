@@ -81,6 +81,21 @@ public class SlackNotificationPlugin implements NotificationPlugin {
                     scope=PropertyScope.Instance)
     private String slack_channel;
 
+    @PluginProperty(
+            title = "Slack External Message Template Path",
+            description = "Path to the directory containing external Slack message templates",
+            defaultValue = "/var/lib/rundeck/libext/templates",
+            scope = PropertyScope.Instance
+    )
+    private String slack_ext_message_template_path;
+
+    @PluginProperty(
+            title = "Custom Template",
+            description = "Freemarker template file name (e.g. ddarby.ftl). Leave empty for default message",
+            required = false
+    )
+    private String external_template;
+
     /**
      * Sends a message to a Slack room when a job notification event is raised by Rundeck.
      *
@@ -93,12 +108,34 @@ public class SlackNotificationPlugin implements NotificationPlugin {
     public boolean postNotification(String trigger, Map executionData, Map config) {
 
         String ACTUAL_SLACK_TEMPLATE;
+        try {
+            final ClassTemplateLoader builtInTemplate =
+                    new ClassTemplateLoader(SlackNotificationPlugin.class, "/templates");
 
-        ClassTemplateLoader builtInTemplate = new ClassTemplateLoader(SlackNotificationPlugin.class, "/templates");
-        TemplateLoader[] loaders = new TemplateLoader[]{builtInTemplate};
-        MultiTemplateLoader mtl = new MultiTemplateLoader(loaders);
-        FREEMARKER_CFG.setTemplateLoader(mtl);
-        ACTUAL_SLACK_TEMPLATE = SLACK_MESSAGE_TEMPLATE;
+            if (external_template != null && !external_template.isEmpty()) {
+                // External dir FIRST, then built-in fallback
+                final FileTemplateLoader externalDir =
+                        new FileTemplateLoader(new File(slack_ext_message_template_path));
+                final MultiTemplateLoader mtl =
+                        new MultiTemplateLoader(new TemplateLoader[]{externalDir, builtInTemplate});
+                FREEMARKER_CFG.setTemplateLoader(mtl);
+                ACTUAL_SLACK_TEMPLATE = external_template;
+            } else {
+                final MultiTemplateLoader mtl =
+                        new MultiTemplateLoader(new TemplateLoader[]{builtInTemplate});
+                FREEMARKER_CFG.setTemplateLoader(mtl);
+                ACTUAL_SLACK_TEMPLATE = SLACK_MESSAGE_TEMPLATE;
+            }
+
+            FREEMARKER_CFG.setDefaultEncoding("UTF-8");
+        } catch (IOException | SecurityException e) {
+            System.err.printf(
+                    "Error accessing template path '%s': %s%n",
+                    slack_ext_message_template_path, e.getMessage()
+            );
+            return false;
+        }
+
 
         TRIGGER_NOTIFICATION_DATA.put(TRIGGER_START,   new SlackNotificationData(ACTUAL_SLACK_TEMPLATE, SLACK_MESSAGE_COLOR_YELLOW));
         TRIGGER_NOTIFICATION_DATA.put(TRIGGER_SUCCESS, new SlackNotificationData(ACTUAL_SLACK_TEMPLATE, SLACK_MESSAGE_COLOR_GREEN));
@@ -110,7 +147,7 @@ public class SlackNotificationPlugin implements NotificationPlugin {
         try {
             FREEMARKER_CFG.setSetting(Configuration.CACHE_STORAGE_KEY, "strong:20, soft:250");
         }catch(Exception e){
-            System.err.printf("Got and exception from Freemarker: %s", e.getMessage());
+            System.err.printf("Got and exception from Freemarker: %s%n", e.getMessage());
         }
 
         if (!TRIGGER_NOTIFICATION_DATA.containsKey(trigger)) {
@@ -145,7 +182,7 @@ public class SlackNotificationPlugin implements NotificationPlugin {
         model.put("color", color);
         model.put("executionData", executionData);
         model.put("config", config);
-        if (channel != null) {
+        if (channel != null && !channel.isEmpty()) {
             model.put("channel", channel);
         }
 
@@ -208,19 +245,21 @@ public class SlackNotificationPlugin implements NotificationPlugin {
         }
     }
 
-    private void putRequestStream(HttpURLConnection connection, String message) {
+    private void putRequestStream(HttpURLConnection connection, String body) {
         try {
             connection.setRequestMethod("POST");
+            connection.setRequestProperty("Content-Type", "application/x-www-form-urlencoded; charset=UTF-8");
             connection.setRequestProperty("charset", "utf-8");
-
             connection.setDoInput(true);
             connection.setDoOutput(true);
-            DataOutputStream wr = new DataOutputStream(connection.getOutputStream());
-            wr.writeBytes(message);
-            wr.flush();
-            wr.close();
+            try (DataOutputStream wr = new DataOutputStream(connection.getOutputStream())) {
+                wr.write(body.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+                wr.flush();
+            }
         } catch (IOException ioEx) {
-            throw new SlackNotificationPluginException("Error putting data to Slack URL: [" + ioEx.getMessage() + "].", ioEx);
+            throw new SlackNotificationPluginException(
+                    "Error putting data to Slack URL: [" + ioEx.getMessage() + "].", ioEx
+            );
         }
     }
 
@@ -243,10 +282,12 @@ public class SlackNotificationPlugin implements NotificationPlugin {
     }
 
     private String getSlackResponse(InputStream responseStream) {
-        try {
-            return new Scanner(responseStream,"UTF-8").useDelimiter("\\A").next();
+        try (Scanner s = new Scanner(responseStream, java.nio.charset.StandardCharsets.UTF_8.name())) {
+            return s.useDelimiter("\\A").hasNext() ? s.next() : "";
         } catch (Exception ioEx) {
-            throw new SlackNotificationPluginException("Error reading Slack API JSON response: [" + ioEx.getMessage() + "].", ioEx);
+            throw new SlackNotificationPluginException(
+                    "Error reading Slack API JSON response: [" + ioEx.getMessage() + "].", ioEx
+            );
         }
     }
 
