@@ -29,6 +29,7 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 import freemarker.cache.ClassTemplateLoader;
@@ -39,6 +40,10 @@ import freemarker.template.Configuration;
 import freemarker.template.Template;
 import freemarker.template.TemplateException;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+
 /**
  * Sends Rundeck job notification messages to a Slack room.
  *
@@ -47,6 +52,9 @@ import freemarker.template.TemplateException;
 @Plugin(service= "Notification", name="SlackNotification")
 @PluginDescription(title="Slack Incoming WebHook", description="Sends Rundeck Notifications to Slack")
 public class SlackNotificationPlugin implements NotificationPlugin {
+
+    private static final Logger LOG = LoggerFactory.getLogger(SlackNotificationPlugin.class);
+
 
     private static final String SLACK_MESSAGE_COLOR_GREEN = "good";
     private static final String SLACK_MESSAGE_COLOR_YELLOW = "warning";
@@ -118,12 +126,11 @@ public class SlackNotificationPlugin implements NotificationPlugin {
                 String resolvedTemplatePath = slack_ext_message_template_path;
 
                 // Default when blank/null: ${rdeck.base}/libext/templates
+                String rdeckBase = System.getProperty("rdeck.base", ".");
                 if (resolvedTemplatePath == null || resolvedTemplatePath.trim().isEmpty()) {
-                    String rdeckBase = System.getProperty("rdeck.base", ".");
                     resolvedTemplatePath = rdeckBase + File.separator + "libext" + File.separator + "templates";
                 } else {
                     // Expand ${rdeck.base} and $RDECK_BASE if user typed them
-                    String rdeckBase = System.getProperty("rdeck.base", ".");
                     String rdeckBaseEnv = System.getenv("RDECK_BASE");
                     if (rdeckBaseEnv == null || rdeckBaseEnv.trim().isEmpty()) {
                         rdeckBaseEnv = rdeckBase;
@@ -141,11 +148,11 @@ public class SlackNotificationPlugin implements NotificationPlugin {
                             new MultiTemplateLoader(new TemplateLoader[]{externalDir, builtInTemplate});
                     FREEMARKER_CFG.setTemplateLoader(mtl);
                     ACTUAL_SLACK_TEMPLATE = external_template;
-                    System.err.printf("Slack: using external template dir: %s; template: %s%n",
+                    LOG.info("Slack: using external template dir: {}; template: {}%n",
                             resolvedTemplatePath, external_template);
                 } catch (IOException | SecurityException e) {
-                    System.err.printf(
-                            "Slack: could not use external template path '%s' (%s). Falling back to built-in.%n",
+                    LOG.warn(
+                            "Slack: could not use external template path '{}' ({}). Falling back to built-in.%n",
                             resolvedTemplatePath, e.getMessage()
                     );
                     final MultiTemplateLoader mtl =
@@ -164,8 +171,8 @@ public class SlackNotificationPlugin implements NotificationPlugin {
             FREEMARKER_CFG.setDefaultEncoding("UTF-8");
         } catch (Exception e) {
             // Last-resort fallback to built-in template
-            System.err.printf(
-                    "Slack: unexpected error resolving templates (%s). Falling back to built-in.%n",
+            LOG.error(
+                    "Slack: unexpected error resolving templates ({}). Falling back to built-in.%n",
                     e.getMessage()
             );
             final ClassTemplateLoader builtInTemplate =
@@ -175,6 +182,7 @@ public class SlackNotificationPlugin implements NotificationPlugin {
             FREEMARKER_CFG.setTemplateLoader(mtl);
             ACTUAL_SLACK_TEMPLATE = SLACK_MESSAGE_TEMPLATE;
         }
+        LOG.debug("Slack: trigger='{}', template='{}', channel='{}'", trigger, ACTUAL_SLACK_TEMPLATE, slack_channel);
 
 
         TRIGGER_NOTIFICATION_DATA.put(TRIGGER_START,   new SlackNotificationData(ACTUAL_SLACK_TEMPLATE, SLACK_MESSAGE_COLOR_YELLOW));
@@ -187,7 +195,7 @@ public class SlackNotificationPlugin implements NotificationPlugin {
         try {
             FREEMARKER_CFG.setSetting(Configuration.CACHE_STORAGE_KEY, "strong:20, soft:250");
         }catch(Exception e){
-            System.err.printf("Got and exception from Freemarker: %s%n", e.getMessage());
+            LOG.warn("Got and exception from Freemarker: {}%n", e.getMessage());
         }
 
         if (!TRIGGER_NOTIFICATION_DATA.containsKey(trigger)) {
@@ -202,7 +210,11 @@ public class SlackNotificationPlugin implements NotificationPlugin {
         String webhook_url=this.webhook_base_url+"/"+this.webhook_token;
 
         String message = generateMessage(trigger, executionData, config, this.slack_channel);
+        LOG.debug("Slack: posting to baseUrl='{}', token='{}'", webhook_base_url, maskToken(webhook_token));
         String slackResponse = invokeSlackAPIMethod(webhook_url, message);
+        if (!"ok".equals(slackResponse)) {
+            LOG.warn("Slack: non-ok response: {}", slackResponse);
+        }
         String ms = "payload=" + this.urlEncode(message);
 
         if ("ok".equals(slackResponse)) {
@@ -280,6 +292,7 @@ public class SlackNotificationPlugin implements NotificationPlugin {
 
     private HttpURLConnection openConnection(URL requestUrl) {
         try {
+            LOG.trace("Slack: opening connection to {}", requestUrl);
             return (HttpURLConnection) requestUrl.openConnection();
         } catch (IOException ioEx) {
             throw new SlackNotificationPluginException("Error opening connection to Slack URL: [" + ioEx.getMessage() + "].", ioEx);
@@ -293,6 +306,7 @@ public class SlackNotificationPlugin implements NotificationPlugin {
             connection.setRequestProperty("charset", "utf-8");
             connection.setDoInput(true);
             connection.setDoOutput(true);
+            LOG.trace("Slack: sending POST with Content-Type={}", connection.getRequestProperty("Content-Type"));
             try (DataOutputStream wr = new DataOutputStream(connection.getOutputStream())) {
                 wr.write(body.getBytes(java.nio.charset.StandardCharsets.UTF_8));
                 wr.flush();
@@ -311,6 +325,8 @@ public class SlackNotificationPlugin implements NotificationPlugin {
         } catch (IOException ioEx) {
             input = connection.getErrorStream();
         }
+        LOG.trace("Slack: got response stream (errorStream? {})", input == connection.getErrorStream());
+
         return input;
     }
 
@@ -349,6 +365,18 @@ public class SlackNotificationPlugin implements NotificationPlugin {
             this.color = color;
             this.template = template;
         }
+    }
+    private String maskToken(String token) {
+        if (token == null) return "null";
+        // Keep first 6 chars of each path segment, mask the rest
+        String[] parts = token.split("/");
+        for (int i = 0; i < parts.length; i++) {
+            String p = parts[i];
+            if (p.length() > 6) {
+                parts[i] = p.substring(0, 6) + "…";
+            }
+        }
+        return String.join("/", parts);
     }
 
 }
