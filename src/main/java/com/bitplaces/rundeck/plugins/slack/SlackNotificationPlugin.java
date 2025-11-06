@@ -91,7 +91,7 @@ public class SlackNotificationPlugin implements NotificationPlugin {
 
     @PluginProperty(
             title = "Custom Template",
-            description = "Freemarker template file name (e.g. ddarby.ftl). Leave empty for default message",
+            description = "Custom Freemarker Template to use for notification. Leave empty for default message",
             required = false
     )
     private String external_template;
