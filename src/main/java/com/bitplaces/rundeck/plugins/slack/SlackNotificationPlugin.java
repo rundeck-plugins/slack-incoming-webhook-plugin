@@ -82,9 +82,10 @@ public class SlackNotificationPlugin implements NotificationPlugin {
     private String slack_channel;
 
     @PluginProperty(
-            title = "Slack External Message Template Path",
-            description = "Path to the directory containing external Slack message templates",
-            defaultValue = "/var/lib/rundeck/libext/templates",
+            title = "Slack External Message Custom Template Path",
+            description = "Directory containing external Slack message custom templates (.ftl). " +
+                    "Defaults to ${rdeck.base}/libext/templates",
+            defaultValue = "${rdeck.base}/libext/templates",
             scope = PropertyScope.Instance
     )
     private String slack_ext_message_template_path;
@@ -113,13 +114,46 @@ public class SlackNotificationPlugin implements NotificationPlugin {
                     new ClassTemplateLoader(SlackNotificationPlugin.class, "/templates");
 
             if (external_template != null && !external_template.isEmpty()) {
-                // External dir FIRST, then built-in fallback
-                final FileTemplateLoader externalDir =
-                        new FileTemplateLoader(new File(slack_ext_message_template_path));
-                final MultiTemplateLoader mtl =
-                        new MultiTemplateLoader(new TemplateLoader[]{externalDir, builtInTemplate});
-                FREEMARKER_CFG.setTemplateLoader(mtl);
-                ACTUAL_SLACK_TEMPLATE = external_template;
+                // Resolve external templates path safely
+                String resolvedTemplatePath = slack_ext_message_template_path;
+
+                // Default when blank/null: ${rdeck.base}/libext/templates
+                if (resolvedTemplatePath == null || resolvedTemplatePath.trim().isEmpty()) {
+                    String rdeckBase = System.getProperty("rdeck.base", ".");
+                    resolvedTemplatePath = rdeckBase + File.separator + "libext" + File.separator + "templates";
+                } else {
+                    // Expand ${rdeck.base} and $RDECK_BASE if user typed them
+                    String rdeckBase = System.getProperty("rdeck.base", ".");
+                    String rdeckBaseEnv = System.getenv("RDECK_BASE");
+                    if (rdeckBaseEnv == null || rdeckBaseEnv.trim().isEmpty()) {
+                        rdeckBaseEnv = rdeckBase;
+                    }
+                    resolvedTemplatePath = resolvedTemplatePath
+                            .replace("${rdeck.base}", rdeckBase)
+                            .replace("$RDECK_BASE", rdeckBaseEnv);
+                }
+
+                // 3) Try external dir FIRST, then built-in as fallback
+                try {
+                    final FileTemplateLoader externalDir =
+                            new FileTemplateLoader(new File(resolvedTemplatePath));
+                    final MultiTemplateLoader mtl =
+                            new MultiTemplateLoader(new TemplateLoader[]{externalDir, builtInTemplate});
+                    FREEMARKER_CFG.setTemplateLoader(mtl);
+                    ACTUAL_SLACK_TEMPLATE = external_template;
+                    System.err.printf("Slack: using external template dir: %s; template: %s%n",
+                            resolvedTemplatePath, external_template);
+                } catch (IOException | SecurityException e) {
+                    System.err.printf(
+                            "Slack: could not use external template path '%s' (%s). Falling back to built-in.%n",
+                            resolvedTemplatePath, e.getMessage()
+                    );
+                    final MultiTemplateLoader mtl =
+                            new MultiTemplateLoader(new TemplateLoader[]{builtInTemplate});
+                    FREEMARKER_CFG.setTemplateLoader(mtl);
+                    ACTUAL_SLACK_TEMPLATE = SLACK_MESSAGE_TEMPLATE;
+                }
+
             } else {
                 final MultiTemplateLoader mtl =
                         new MultiTemplateLoader(new TemplateLoader[]{builtInTemplate});
@@ -128,12 +162,18 @@ public class SlackNotificationPlugin implements NotificationPlugin {
             }
 
             FREEMARKER_CFG.setDefaultEncoding("UTF-8");
-        } catch (IOException | SecurityException e) {
+        } catch (Exception e) {
+            // Last-resort fallback to built-in template
             System.err.printf(
-                    "Error accessing template path '%s': %s%n",
-                    slack_ext_message_template_path, e.getMessage()
+                    "Slack: unexpected error resolving templates (%s). Falling back to built-in.%n",
+                    e.getMessage()
             );
-            return false;
+            final ClassTemplateLoader builtInTemplate =
+                    new ClassTemplateLoader(SlackNotificationPlugin.class, "/templates");
+            final MultiTemplateLoader mtl =
+                    new MultiTemplateLoader(new TemplateLoader[]{builtInTemplate});
+            FREEMARKER_CFG.setTemplateLoader(mtl);
+            ACTUAL_SLACK_TEMPLATE = SLACK_MESSAGE_TEMPLATE;
         }
 
 
@@ -154,7 +194,8 @@ public class SlackNotificationPlugin implements NotificationPlugin {
             throw new IllegalArgumentException("Unknown trigger type: [" + trigger + "].");
         }
 
-        if(this.webhook_base_url.isEmpty() || this.webhook_token.isEmpty()){
+        if(this.webhook_base_url == null || this.webhook_base_url.isEmpty()
+                || this.webhook_token == null || this.webhook_token.isEmpty()) {
             throw new IllegalArgumentException("URL or Token not set");
         }
 
