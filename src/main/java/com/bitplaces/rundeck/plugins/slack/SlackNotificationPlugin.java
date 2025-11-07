@@ -172,7 +172,7 @@ public class SlackNotificationPlugin implements NotificationPlugin {
         } catch (Exception e) {
             // Last-resort fallback to built-in template
             LOG.error(
-                    "Slack: unexpected error resolving templates ({}). Falling back to built-in.%n",
+                    "Slack: unexpected error resolving templates ({}). Falling back to built-in.",
                     e.getMessage()
             );
             final ClassTemplateLoader builtInTemplate =
