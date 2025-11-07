@@ -90,7 +90,7 @@ public class SlackNotificationPlugin implements NotificationPlugin {
     private String slack_channel;
 
     @PluginProperty(
-            title = "Slack External Message Custom Template Path",
+            title = "Custom Template Path",
             description = "Directory containing external Slack message custom templates (.ftl). " +
                     "Defaults to ${rdeck.base}/libext/templates",
             defaultValue = "${rdeck.base}/libext/templates",
