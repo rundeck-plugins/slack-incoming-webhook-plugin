@@ -319,13 +319,15 @@ public class SlackNotificationPlugin implements NotificationPlugin {
     }
 
     private InputStream getResponseStream(HttpURLConnection connection) {
-        InputStream input = null;
+        InputStream input;
+        boolean usedErrorStream = false;
         try {
             input = connection.getInputStream();
         } catch (IOException ioEx) {
             input = connection.getErrorStream();
+            usedErrorStream = true;
         }
-        LOG.trace("Slack: got response stream (errorStream? {})", input == connection.getErrorStream());
+        LOG.trace("Slack: got response stream (errorStream? {})", usedErrorStream);
 
         return input;
     }
