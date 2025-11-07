@@ -148,11 +148,11 @@ public class SlackNotificationPlugin implements NotificationPlugin {
                             new MultiTemplateLoader(new TemplateLoader[]{externalDir, builtInTemplate});
                     FREEMARKER_CFG.setTemplateLoader(mtl);
                     ACTUAL_SLACK_TEMPLATE = external_template;
-                    LOG.info("Slack: using external template dir: {}; template: {}%n",
+                    LOG.info("Slack: using external template dir: {}; template: {}\n",
                             resolvedTemplatePath, external_template);
                 } catch (IOException | SecurityException e) {
                     LOG.warn(
-                            "Slack: could not use external template path '{}' ({}). Falling back to built-in.%n",
+                            "Slack: could not use external template path '{}' ({}). Falling back to built-in.\n",
                             resolvedTemplatePath, e.getMessage()
                     );
                     final MultiTemplateLoader mtl =
