@@ -70,8 +70,29 @@ public class SlackNotificationPlugin implements NotificationPlugin {
     private static final Map<String, SlackNotificationData> TRIGGER_NOTIFICATION_DATA = new HashMap<String, SlackNotificationData>();
 
     private static final Configuration FREEMARKER_CFG = new Configuration();
+    /**
+     * Stores the Freemarker configuration for the current notification event.
+     * <p>
+     * This field is set in {@code postNotification()} before template rendering.
+     * Since the plugin is invoked per notification event, this field holds per-call context
+     * and is not shared across threads.
+     */
     private freemarker.template.Configuration currentFreemarkerCfg;
+
+    /**
+     * Stores the template name for the current notification event.
+     * <p>
+     * This field is set in {@code postNotification()} before template rendering.
+     * It holds per-call context and is not shared across threads.
+     */
     private String currentTemplateName;
+
+    /**
+     * Stores the color value for the current notification event.
+     * <p>
+     * This field is set in {@code postNotification()} before template rendering.
+     * It holds per-call context and is not shared across threads.
+     */
     private String currentColor;
 
 
