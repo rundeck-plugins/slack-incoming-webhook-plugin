@@ -1,6 +1,8 @@
 package com.bitplaces.rundeck.plugins.slack;
 
 import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.io.TempDir;
+
 import java.io.*;
 import java.net.*;
 import java.nio.charset.StandardCharsets;
@@ -89,9 +91,8 @@ public class SlackNotificationPluginTest {
     }
 
     @Test
-    void externalTemplate_resolvesBlankPath_usesRdeckBase() throws Exception {
+    void externalTemplate_resolvesBlankPath_usesRdeckBase(@TempDir Path rdeck) throws Exception {
         // Point rdeck.base to a tmp dir
-        Path rdeck = Files.createTempDirectory("rdeck");
         System.setProperty("rdeck.base", rdeck.toString());
 
         // Create ${rdeck.base}/libext/templates
@@ -108,19 +109,15 @@ public class SlackNotificationPluginTest {
         );
 
         TestableSlackPlugin plugin = new TestableSlackPlugin();
-
-        // Configure plugin: blank path => ${rdeck.base}/libext/templates
         setField(plugin, "slack_ext_message_template_path", "");
         setField(plugin, "external_template", externalName);
         setField(plugin, "webhook_base_url", "https://hooks.slack.com/services");
         setField(plugin, "webhook_token", "T/B/XYZ");
         setField(plugin, "slack_channel", "#dummy");
 
-        // Provide minimal exec map
         Map<String,Object> exec = new HashMap<>();
         exec.put("user", "anyone");
 
-        // Call
         boolean ok = plugin.postNotification("start", exec, Collections.emptyMap());
         assertTrue(ok, "postNotification should return true");
 
@@ -129,13 +126,12 @@ public class SlackNotificationPluginTest {
         assertTrue(decoded.contains(marker), "Template output rendered");
     }
 
+
     @Test
-    void externalTemplate_expandsVariables() throws Exception {
+    void externalTemplate_expandsVariables(@TempDir Path base) throws Exception {
+        System.setProperty("rdeck.base", base.toString());
 
-        File base = Files.createTempDirectory("rdeck").toFile();
-        System.setProperty("rdeck.base", base.getAbsolutePath());
-
-        File dir = new File(base, "libext/templates");
+        File dir = new File(base.toFile(), "libext/templates");
         assertTrue(dir.mkdirs() || dir.exists());
 
         File ftl = new File(dir, "x.ftl");
@@ -148,16 +144,16 @@ public class SlackNotificationPluginTest {
         setField(p, "webhook_base_url", TEST_BASE);
         setField(p, "webhook_token", TEST_TOKEN);
         setField(p, "external_template", "x.ftl");
-        // Use ${rdeck.base} in the property to ensure expansion
         setField(p, "slack_ext_message_template_path", "${rdeck.base}/libext/templates");
 
         boolean ok = p.postNotification("success", executionData(), config());
-
         assertTrue(ok);
+
         String body = p.conn.sent.toString(StandardCharsets.UTF_8);
         String decoded = URLDecoder.decode(body.substring("payload=".length()), StandardCharsets.UTF_8);
         assertTrue(decoded.contains("\"X-1\""));
     }
+
 
     @Test
     void externalTemplate_invalidPath_fallsBackAndStillPosts() {
