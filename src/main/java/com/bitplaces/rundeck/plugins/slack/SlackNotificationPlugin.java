@@ -262,7 +262,7 @@ public class SlackNotificationPlugin implements NotificationPlugin {
         }
     }
 
-    private String invokeSlackAPIMethod(String webhook_url, String message) {
+    protected String invokeSlackAPIMethod(String webhook_url, String message) {
         URL requestUrl = toURL(webhook_url);
 
         HttpURLConnection connection = null;
@@ -282,7 +282,7 @@ public class SlackNotificationPlugin implements NotificationPlugin {
         }
     }
 
-    private URL toURL(String url) {
+    protected URL toURL(String url) {
         try {
             return new URL(url);
         } catch (MalformedURLException malformedURLEx) {
@@ -290,7 +290,7 @@ public class SlackNotificationPlugin implements NotificationPlugin {
         }
     }
 
-    private HttpURLConnection openConnection(URL requestUrl) {
+    protected HttpURLConnection openConnection(URL requestUrl) {
         try {
             LOG.trace("Slack: opening connection to {}", requestUrl);
             return (HttpURLConnection) requestUrl.openConnection();

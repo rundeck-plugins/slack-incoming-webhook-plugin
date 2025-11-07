@@ -48,6 +48,10 @@ dependencies {
     implementation(libs.rundeckCore) {
         exclude(group: "com.jcraft")
     }
+    testImplementation("org.junit.jupiter:junit-jupiter:5.11.0")
+    testImplementation("org.mockito:mockito-core:5.13.0")
+    testImplementation("org.slf4j:slf4j-simple:2.0.13")
+    testImplementation(libs.rundeckCore)
     
     // Add secure commons-lang3 to provide alternative to vulnerable commons-lang 2.6
     implementation(libs.commonsLang3)
@@ -67,7 +71,9 @@ tasks.register('copyToLib', Copy) {
     into "$buildDir/output/lib"
     from configurations.pluginLibs
 }
-
+tasks.test {
+    useJUnitPlatform()
+}
 jar {
     //include contents of output dir
     from "$buildDir/output"
