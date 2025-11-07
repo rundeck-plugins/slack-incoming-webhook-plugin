@@ -1,6 +1,5 @@
 package com.bitplaces.rundeck.plugins.slack;
 
-import org.apache.commons.collections.FastArrayList;
 import org.junit.jupiter.api.*;
 import java.io.*;
 import java.net.*;
