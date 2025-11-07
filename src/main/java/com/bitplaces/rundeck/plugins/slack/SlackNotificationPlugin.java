@@ -195,7 +195,7 @@ public class SlackNotificationPlugin implements NotificationPlugin {
         try {
             FREEMARKER_CFG.setSetting(Configuration.CACHE_STORAGE_KEY, "strong:20, soft:250");
         }catch(Exception e){
-            LOG.warn("Got and exception from Freemarker: {}%n", e.getMessage());
+            LOG.warn("Got and exception from Freemarker: {}", e.getMessage());
         }
 
         if (!TRIGGER_NOTIFICATION_DATA.containsKey(trigger)) {
