@@ -2,7 +2,7 @@
 nexusPublish = "2.0.0"
 freemarker = "2.3.34"
 rundeckCore = "5.17.0-20251103"
-axionRelease = "1.18.16"
+axionRelease = "1.21.1"
 # Security overrides for transitive dependencies
 commonsLang3 = "3.19.0"
 
