@@ -27,7 +27,7 @@ jobs:
         id: get_version
         run: VERSION=$(./gradlew currentVersion -q -Prelease.quiet) &&  echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
       - name: Upload plugin jar
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           # Artifact name
           name: Plugin ${{ steps.get_version.outputs.VERSION }}
