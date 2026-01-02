@@ -6,7 +6,7 @@ plugins {
 
 apply plugin: 'java'
 
-group = 'org.rundeck.plugins'
+group = 'com.github.rundeck-plugins'
 ext.publishName = "Slack Incoming Webhook Plugin ${project.version}"
 ext.publishDescription = project.description ?: 'Rundeck Plugin to send Slack Webhook'
 ext.githubSlug = 'rundeck-plugins/slack-incoming-webhook-plugin'
@@ -15,7 +15,8 @@ ext.developers = [
 ]
 
 java {
-    sourceCompatibility = JavaVersion.VERSION_11
+    sourceCompatibility = JavaVersion.VERSION_17
+    targetCompatibility = JavaVersion.VERSION_17
     withJavadocJar()
     withSourcesJar()
 }
@@ -39,7 +40,11 @@ scmVersion {
 }
 project.version = scmVersion.version
 
+// Override version for Grails 7 upgrade
+project.version = '1.2.9-grails7-upgrade-test'
+
 repositories {
+    mavenLocal()
     mavenCentral()
 }
 
@@ -91,7 +96,7 @@ jar {
 jar.dependsOn(copyToLib)
 
 nexusPublishing {
-    packageGroup = 'org.rundeck.plugins'
+    packageGroup = 'com.github.rundeck-plugins'
     repositories {
         sonatype {
             nexusUrl.set(uri("https://ossrh-staging-api.central.sonatype.com/service/local/"))
