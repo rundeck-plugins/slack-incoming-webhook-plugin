@@ -45,6 +45,13 @@ project.version = '1.2.10-grails7-upgrade-test'
 
 repositories {
     mavenLocal()
+    maven {
+        name = 'Central Portal Snapshots'
+        url = 'https://central.sonatype.com/repository/maven-snapshots/'
+        content {
+            includeGroup('org.rundeck')
+        }
+    }
     mavenCentral()
 }
 
