@@ -6,7 +6,7 @@ plugins {
 
 apply plugin: 'java'
 
-group = 'com.github.rundeck-plugins'
+group = 'com.rundeck.plugins'
 ext.publishName = "Slack Incoming Webhook Plugin ${project.version}"
 ext.publishDescription = project.description ?: 'Rundeck Plugin to send Slack Webhook'
 ext.githubSlug = 'rundeck-plugins/slack-incoming-webhook-plugin'
@@ -32,16 +32,14 @@ configurations{
 }
 
 scmVersion {
-    ignoreUncommittedChanges = true
+    ignoreUncommittedChanges = false
     tag {
-        prefix = 'v'
+        prefix = ''           // NO "v" prefix - see PLUGIN_TAGGING_ARCHITECTURE.md
         versionSeparator = ''
     }
+    versionCreator 'simple'  // Use simple version creator (just tag name)
 }
 project.version = scmVersion.version
-
-// Override version for Grails 7 upgrade
-project.version = '1.3.9-grails7-upgrade-test'
 
 repositories {
     mavenLocal()
@@ -103,7 +101,7 @@ jar {
 jar.dependsOn(copyToLib)
 
 nexusPublishing {
-    packageGroup = 'com.github.rundeck-plugins'
+    packageGroup = 'com.rundeck.plugins'
     repositories {
         sonatype {
             nexusUrl.set(uri("https://ossrh-staging-api.central.sonatype.com/service/local/"))
@@ -114,3 +112,20 @@ nexusPublishing {
 
 
 apply from: "${rootDir}/gradle/publishing.gradle"
+
+// Add PackageCloud repository
+publishing {
+    repositories {
+        maven {
+            name = "PackageCloudTest"
+            url = uri("https://packagecloud.io/pagerduty/rundeckpro-test/maven2")
+            authentication {
+                header(HttpHeaderAuthentication)
+            }
+            credentials(HttpHeaderCredentials) {
+                name = "Authorization"
+                value = "Bearer " + (System.getenv("PKGCLD_WRITE_TOKEN") ?: project.findProperty("pkgcldWriteToken"))
+            }
+        }
+    }
+}
