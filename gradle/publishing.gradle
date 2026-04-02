@@ -56,15 +56,18 @@ publishing {
         }
     }
     repositories {
-        maven {
-            name = "PackageCloudTest"
-            url = uri("https://packagecloud.io/pagerduty/rundeckpro-test/maven2")
-            authentication {
-                header(HttpHeaderAuthentication)
-            }
-            credentials(HttpHeaderCredentials) {
-                name = "Authorization"
-                value = "Bearer " + (System.getenv("PKGCLD_WRITE_TOKEN") ?: project.findProperty("pkgcldWriteToken"))
+        def pkgcldWriteToken = System.getenv("PKGCLD_WRITE_TOKEN") ?: project.findProperty("pkgcldWriteToken")
+        if (pkgcldWriteToken) {
+            maven {
+                name = "PackageCloudTest"
+                url = uri("https://packagecloud.io/pagerduty/rundeckpro-test/maven2")
+                authentication {
+                    header(HttpHeaderAuthentication)
+                }
+                credentials(HttpHeaderCredentials) {
+                    name = "Authorization"
+                    value = "Bearer " + pkgcldWriteToken
+                }
             }
         }
     }
