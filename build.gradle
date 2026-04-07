@@ -15,7 +15,8 @@ ext.developers = [
 ]
 
 java {
-    sourceCompatibility = JavaVersion.VERSION_11
+    sourceCompatibility = JavaVersion.VERSION_17
+    targetCompatibility = JavaVersion.VERSION_17
     withJavadocJar()
     withSourcesJar()
 }
@@ -31,21 +32,30 @@ configurations{
 }
 
 scmVersion {
-    ignoreUncommittedChanges = true
+    ignoreUncommittedChanges = false
     tag {
-        prefix = 'v'
+        prefix = ''           // NO "v" prefix - see PLUGIN_TAGGING_ARCHITECTURE.md
         versionSeparator = ''
     }
+    versionCreator 'simple'  // Use simple version creator (just tag name)
 }
 project.version = scmVersion.version
 
 repositories {
+    mavenLocal()
+    maven {
+        name = 'Central Portal Snapshots'
+        url = 'https://central.sonatype.com/repository/maven-snapshots/'
+        content {
+            includeGroup('org.rundeck')
+        }
+    }
     mavenCentral()
 }
 
 dependencies {
     pluginLibs libs.freemarker
-    implementation(libs.rundeckCore) {
+    compileOnly(libs.rundeckCore) {
         exclude(group: "com.jcraft")
     }
 
@@ -110,3 +120,20 @@ nexusPublishing {
 
 
 apply from: "${rootDir}/gradle/publishing.gradle"
+
+// Add PackageCloud repository
+publishing {
+    repositories {
+        maven {
+            name = "PackageCloudTest"
+            url = uri("https://packagecloud.io/pagerduty/rundeckpro-test/maven2")
+            authentication {
+                header(HttpHeaderAuthentication)
+            }
+            credentials(HttpHeaderCredentials) {
+                name = "Authorization"
+                value = "Bearer " + (System.getenv("PKGCLD_WRITE_TOKEN") ?: project.findProperty("pkgcldWriteToken"))
+            }
+        }
+    }
+}
