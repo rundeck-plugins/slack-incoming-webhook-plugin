@@ -6,7 +6,7 @@ plugins {
 
 apply plugin: 'java'
 
-group = 'com.rundeck.plugins'
+group = 'org.rundeck.plugins'
 ext.publishName = "Slack Incoming Webhook Plugin ${project.version}"
 ext.publishDescription = project.description ?: 'Rundeck Plugin to send Slack Webhook'
 ext.githubSlug = 'rundeck-plugins/slack-incoming-webhook-plugin'
@@ -55,7 +55,7 @@ repositories {
 
 dependencies {
     pluginLibs libs.freemarker
-    implementation(libs.rundeckCore) {
+    compileOnly(libs.rundeckCore) {
         exclude(group: "com.jcraft")
     }
 
@@ -109,7 +109,7 @@ jar {
 jar.dependsOn(copyToLib)
 
 nexusPublishing {
-    packageGroup = 'com.rundeck.plugins'
+    packageGroup = 'org.rundeck.plugins'
     repositories {
         sonatype {
             nexusUrl.set(uri("https://ossrh-staging-api.central.sonatype.com/service/local/"))
