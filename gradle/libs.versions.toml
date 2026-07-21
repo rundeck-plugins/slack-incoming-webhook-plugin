@@ -1,5 +1,4 @@
 [versions]
-nexusPublish = "2.0.0"
 freemarker = "2.3.34"
 rundeckCore = "6.1.0-SNAPSHOT"
 axionRelease = "1.21.2"
@@ -13,4 +12,3 @@ commonsLang3 = { module = "org.apache.commons:commons-lang3", version.ref = "com
 
 [plugins]
 axionRelease = { id = "pl.allegro.tech.build.axion-release", version.ref = "axionRelease" }
-nexusPublish = { id = "io.github.gradle-nexus.publish-plugin", version.ref = "nexusPublish" }
