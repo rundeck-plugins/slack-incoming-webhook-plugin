@@ -1,5 +1,5 @@
 [versions]
-freemarker = "2.3.34"
+freemarker = "2.3.35"
 rundeckCore = "6.2.0-20260908"
 axionRelease = "1.21.3"
 # Security overrides for transitive dependencies
