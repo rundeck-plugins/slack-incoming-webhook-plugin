@@ -1,7 +1,12 @@
+<#setting number_format="computer">
+<#-- Slack treats &, < and > as markup (mentions, links), so escape them in job data -->
+<#function slack text>
+    <#return text?replace("&", "&amp;")?replace("<", "&lt;")?replace(">", "&gt;")>
+</#function>
 <#if executionData.job.group??>
-    <#assign jobName="${executionData.job.group} / ${executionData.job.name}">
+    <#assign jobName="${slack(executionData.job.group)} / ${slack(executionData.job.name)}">
 <#else>
-    <#assign jobName="${executionData.job.name}">
+    <#assign jobName=slack(executionData.job.name)>
 </#if>
 <#assign message="<${executionData.href}|Execution #${executionData.id}> of job <${executionData.job.href}|${jobName}>">
 <#if trigger == "start">
@@ -18,48 +23,48 @@
 
 {
 <#if channel??>
-   "channel":"${channel}",
+   "channel":"${channel?json_string}",
 </#if>
    "attachments":[
       {
-         "fallback":"${state}: ${message}",
-         "pretext":"${message}",
-         "color":"${color}",
+         "fallback":"${state?json_string}: ${message?json_string}",
+         "pretext":"${message?json_string}",
+         "color":"${color?json_string}",
          "fields":[
             {
                "title":"Job Name",
-               "value":"<${executionData.job.href}|${jobName}>",
+               "value":"<${executionData.job.href?json_string}|${jobName?json_string}>",
                "short":true
             },
             {
                "title":"Project",
-               "value":"${executionData.project}",
+               "value":"${slack(executionData.project)?json_string}",
                "short":true
             },
             {
                "title":"Status",
-               "value":"${state}",
+               "value":"${state?json_string}",
                "short":true
             },
             {
                "title":"Execution ID",
-               "value":"<${executionData.href}|#${executionData.id}>",
+               "value":"<${executionData.href?json_string}|#${executionData.id}>",
                "short":true
             },
             {
                "title":"Options",
-               "value":"${(executionData.argstring?replace('"', '\''))!"N/A"}",
+               "value":"${slack(executionData.argstring!"N/A")?json_string}",
                "short":true
             },
             {
                "title":"Started By",
-               "value":"${executionData.user}",
+               "value":"${slack(executionData.user)?json_string}",
                "short":true
             }
 <#if trigger == "failure">
             ,{
                "title":"Failed Nodes",
-               "value":"${executionData.failedNodeListString!"- (Job itself failed)"}",
+               "value":"${slack(executionData.failedNodeListString!"- (Job itself failed)")?json_string}",
                "short":false
             }
 </#if>

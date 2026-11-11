@@ -195,7 +195,61 @@ public class SlackNotificationPluginTest {
         assertEquals("application/x-www-form-urlencoded; charset=UTF-8", p.conn.contentType);
     }
 
+    @Test
+    void defaultTemplate_escapesFieldsForJsonAndSlack() throws Exception {
+        TestableSlackPlugin p = new TestableSlackPlugin();
+        setField(p, "webhook_base_url", TEST_BASE);
+        setField(p, "webhook_token", TEST_TOKEN);
+        setField(p, "slack_channel", "#ops \"blue\"");
+
+        Map<String, Object> exec = executionData();
+        @SuppressWarnings("unchecked")
+        Map<String, Object> job = (Map<String, Object>) exec.get("job");
+        job.put("name", "Backup \"nightly\" C:\\data");
+        job.put("group", "ops\nlinux");
+        exec.put("user", "<!channel> & co");
+        exec.put("argstring", "-path C:\\tmp -msg \"<http://evil.example|click>\"");
+        exec.put("failedNodeListString", "node\"1");
+
+        assertTrue(p.postNotification("failure", exec, config()));
+
+        Map<?, ?> payload = new com.fasterxml.jackson.databind.ObjectMapper().readValue(sentPayload(p), Map.class);
+        assertEquals("#ops \"blue\"", payload.get("channel"));
+        Map<?, ?> attachment = (Map<?, ?>) ((List<?>) payload.get("attachments")).get(0);
+        assertEquals(
+                "<http://rundeck.example/execution/1|Execution #1> of job "
+                        + "<http://rundeck.example/job/1|ops\nlinux / Backup \"nightly\" C:\\data>",
+                attachment.get("pretext"));
+        Map<String, Object> fields = new HashMap<>();
+        for (Object f : (List<?>) attachment.get("fields")) {
+            fields.put((String) ((Map<?, ?>) f).get("title"), ((Map<?, ?>) f).get("value"));
+        }
+        assertEquals("&lt;!channel&gt; &amp; co", fields.get("Started By"));
+        assertEquals("-path C:\\tmp -msg \"&lt;http://evil.example|click&gt;\"", fields.get("Options"));
+        assertEquals("node\"1", fields.get("Failed Nodes"));
+    }
+
+    @Test
+    void defaultTemplate_doesNotGroupExecutionIdDigits() throws Exception {
+        TestableSlackPlugin p = new TestableSlackPlugin();
+        setField(p, "webhook_base_url", TEST_BASE);
+        setField(p, "webhook_token", TEST_TOKEN);
+
+        Map<String, Object> exec = executionData();
+        exec.put("id", 1234567L);
+
+        assertTrue(p.postNotification("success", exec, config()));
+
+        String payload = sentPayload(p);
+        assertTrue(payload.contains("Execution #1234567>"), payload);
+    }
+
     /* ---------- helpers ---------- */
+
+    private static String sentPayload(TestableSlackPlugin p) {
+        String body = p.conn.sent.toString(StandardCharsets.UTF_8);
+        return URLDecoder.decode(body.substring("payload=".length()), StandardCharsets.UTF_8);
+    }
 
     private static void setField(Object target, String name, Object value) {
         try {
