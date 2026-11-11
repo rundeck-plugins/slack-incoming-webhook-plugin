@@ -195,6 +195,36 @@ public class SlackNotificationPluginTest {
         assertEquals("application/x-www-form-urlencoded; charset=UTF-8", p.conn.contentType);
     }
 
+    @Test
+    void invokeSlackAPIMethod_reportsHttpStatusWhenErrorHasNoBody() throws Exception {
+        com.sun.net.httpserver.HttpServer server =
+                com.sun.net.httpserver.HttpServer.create(new InetSocketAddress(InetAddress.getByName("127.0.0.1"), 0), 0);
+        server.createContext("/", exchange -> {
+            exchange.sendResponseHeaders(404, -1); // error status, no body
+            exchange.close();
+        });
+        server.start();
+        try {
+            String url = "http://127.0.0.1:" + server.getAddress().getPort() + "/services/" + TEST_TOKEN;
+
+            SlackNotificationPluginException ex = assertThrows(
+                    SlackNotificationPluginException.class,
+                    () -> new SlackNotificationPlugin().invokeSlackAPIMethod(url, "{}")
+            );
+
+            assertTrue(ex.getMessage().contains("HTTP 404"), ex.getMessage());
+            assertInstanceOf(IOException.class, ex.getCause());
+
+            // Rundeck logs the full exception chain, so check everything a stack trace would print
+            StringWriter logged = new StringWriter();
+            ex.printStackTrace(new PrintWriter(logged));
+            assertTrue(logged.toString().contains("java.io.FileNotFoundException"), logged.toString());
+            assertFalse(logged.toString().contains(TEST_TOKEN), logged.toString());
+        } finally {
+            server.stop(0);
+        }
+    }
+
     /* ---------- helpers ---------- */
 
     private static void setField(Object target, String name, Object value) {

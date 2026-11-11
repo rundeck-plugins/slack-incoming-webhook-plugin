@@ -300,10 +300,37 @@ public class SlackNotificationPlugin implements NotificationPlugin {
         } catch (IOException ioEx) {
             input = connection.getErrorStream();
             usedErrorStream = true;
+            if (input == null) {
+                // No error body to read (timeout, reset, empty error response): report the real failure.
+                throw new SlackNotificationPluginException(
+                        "Slack request failed" + describeStatus(connection) + ": " + ioEx.getClass().getSimpleName(),
+                        withoutMessage(ioEx)
+                );
+            }
         }
         LOG.trace("Slack: got response stream (errorStream? {})", usedErrorStream);
 
         return input;
+    }
+
+    /**
+     * HttpURLConnection puts the full request URL, including the webhook token, in some exception
+     * messages (e.g. FileNotFoundException for a 404), and Rundeck logs the whole cause chain.
+     * Keep the type and stack trace for diagnosis, drop the message and any nested causes.
+     */
+    private static IOException withoutMessage(IOException ioEx) {
+        IOException safe = new IOException(ioEx.getClass().getName() + " (message omitted, it can contain the webhook URL)");
+        safe.setStackTrace(ioEx.getStackTrace());
+        return safe;
+    }
+
+    private static String describeStatus(HttpURLConnection connection) {
+        try {
+            int status = connection.getResponseCode();
+            return status > 0 ? " with HTTP " + status : "";
+        } catch (IOException ioEx) {
+            return "";
+        }
     }
 
     private int getResponseCode(HttpURLConnection connection) {
