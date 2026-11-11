@@ -225,6 +225,15 @@ public class SlackNotificationPluginTest {
         }
     }
 
+    @Test
+    void openConnection_setsTimeouts() throws Exception {
+        HttpURLConnection connection = new SlackNotificationPlugin()
+                .openConnection(new URL("https://hooks.slack.com/services/T/B/X"));
+
+        assertEquals(SlackNotificationPlugin.CONNECT_TIMEOUT_MS, connection.getConnectTimeout());
+        assertEquals(SlackNotificationPlugin.READ_TIMEOUT_MS, connection.getReadTimeout());
+    }
+
     /* ---------- helpers ---------- */
 
     private static void setField(Object target, String name, Object value) {

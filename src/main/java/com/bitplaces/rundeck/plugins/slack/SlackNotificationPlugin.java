@@ -61,6 +61,10 @@ public class SlackNotificationPlugin implements NotificationPlugin {
 
     private static final String SLACK_MESSAGE_TEMPLATE = "slack-incoming-message.ftl";
 
+    // HttpURLConnection waits forever by default, which would block the notification thread
+    static final int CONNECT_TIMEOUT_MS = 10_000;
+    static final int READ_TIMEOUT_MS = 30_000;
+
     private static final String TRIGGER_START = "start";
     private static final String TRIGGER_SUCCESS = "success";
     private static final String TRIGGER_FAILURE = "failure";
@@ -267,7 +271,10 @@ public class SlackNotificationPlugin implements NotificationPlugin {
     protected HttpURLConnection openConnection(URL requestUrl) {
         try {
             LOG.trace("Slack: opening connection to {}", requestUrl);
-            return (HttpURLConnection) requestUrl.openConnection();
+            HttpURLConnection connection = (HttpURLConnection) requestUrl.openConnection();
+            connection.setConnectTimeout(CONNECT_TIMEOUT_MS);
+            connection.setReadTimeout(READ_TIMEOUT_MS);
+            return connection;
         } catch (IOException ioEx) {
             throw new SlackNotificationPluginException("Error opening connection to Slack URL: [" + ioEx.getMessage() + "].", ioEx);
         }
