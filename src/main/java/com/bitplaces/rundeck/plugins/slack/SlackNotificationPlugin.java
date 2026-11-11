@@ -61,6 +61,10 @@ public class SlackNotificationPlugin implements NotificationPlugin {
 
     private static final String SLACK_MESSAGE_TEMPLATE = "slack-incoming-message.ftl";
 
+    // HttpURLConnection waits forever by default, which would block the notification thread
+    static final int CONNECT_TIMEOUT_MS = 10_000;
+    static final int READ_TIMEOUT_MS = 30_000;
+
     private static final String TRIGGER_START = "start";
     private static final String TRIGGER_SUCCESS = "success";
     private static final String TRIGGER_FAILURE = "failure";
@@ -267,7 +271,10 @@ public class SlackNotificationPlugin implements NotificationPlugin {
     protected HttpURLConnection openConnection(URL requestUrl) {
         try {
             LOG.trace("Slack: opening connection to {}", requestUrl);
-            return (HttpURLConnection) requestUrl.openConnection();
+            HttpURLConnection connection = (HttpURLConnection) requestUrl.openConnection();
+            connection.setConnectTimeout(CONNECT_TIMEOUT_MS);
+            connection.setReadTimeout(READ_TIMEOUT_MS);
+            return connection;
         } catch (IOException ioEx) {
             throw new SlackNotificationPluginException("Error opening connection to Slack URL: [" + ioEx.getMessage() + "].", ioEx);
         }
@@ -300,10 +307,37 @@ public class SlackNotificationPlugin implements NotificationPlugin {
         } catch (IOException ioEx) {
             input = connection.getErrorStream();
             usedErrorStream = true;
+            if (input == null) {
+                // No error body to read (timeout, reset, empty error response): report the real failure.
+                throw new SlackNotificationPluginException(
+                        "Slack request failed" + describeStatus(connection) + ": " + ioEx.getClass().getSimpleName(),
+                        withoutMessage(ioEx)
+                );
+            }
         }
         LOG.trace("Slack: got response stream (errorStream? {})", usedErrorStream);
 
         return input;
+    }
+
+    /**
+     * HttpURLConnection puts the full request URL, including the webhook token, in some exception
+     * messages (e.g. FileNotFoundException for a 404), and Rundeck logs the whole cause chain.
+     * Keep the type and stack trace for diagnosis, drop the message and any nested causes.
+     */
+    private static IOException withoutMessage(IOException ioEx) {
+        IOException safe = new IOException(ioEx.getClass().getName() + " (message omitted, it can contain the webhook URL)");
+        safe.setStackTrace(ioEx.getStackTrace());
+        return safe;
+    }
+
+    private static String describeStatus(HttpURLConnection connection) {
+        try {
+            int status = connection.getResponseCode();
+            return status > 0 ? " with HTTP " + status : "";
+        } catch (IOException ioEx) {
+            return "";
+        }
     }
 
     private int getResponseCode(HttpURLConnection connection) {
