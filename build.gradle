@@ -66,6 +66,16 @@ dependencies {
     
     // Add secure commons-lang3 to provide alternative to vulnerable commons-lang 2.6
     implementation(libs.commonsLang3)
+
+    // Security overrides for transitive deps of rundeck-core (Snyk)
+    compileOnly(platform(libs.jacksonBom))
+    testImplementation(platform(libs.jacksonBom))
+    constraints {
+        compileOnly(libs.guava) { because 'SNYK-JAVA-COMGOOGLEGUAVA-20825054' }
+        testImplementation(libs.guava) { because 'SNYK-JAVA-COMGOOGLEGUAVA-20825054' }
+        compileOnly(libs.commonsCodec) { because 'SNYK-JAVA-COMMONSCODEC-22391319' }
+        testImplementation(libs.commonsCodec) { because 'SNYK-JAVA-COMMONSCODEC-22391319' }
+    }
 }
 
 configurations.all {
